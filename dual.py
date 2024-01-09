@@ -1,70 +1,98 @@
 import wx
 import numpy as np
+from equation_parser import parse_objective, parse_constraint
 
 class LPDualPanel(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, lp_solve_panel):
         super(LPDualPanel, self).__init__(parent)
-
-        self.optimization_type_label = wx.StaticText(self, label="Optimization Type:")
-        self.optimization_type_text = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
-        self.variables_label = wx.StaticText(self, label="Number of Variables:")
-        self.variables_text = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
-        self.equations_label = wx.StaticText(self, label="Number of Equations:")
-        self.equations_text = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
-        self.obj_coef_label = wx.StaticText(self, label="Objective Coefficients:")
-        self.obj_coef_text = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
-        self.constraints_coef_label = wx.StaticText(self, label="Constraints Coefficients:")
-        self.constraints_coef_text = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER | wx.TE_MULTILINE)
-
-        self.calculate_button = wx.Button(self, label="Calculate Dual")
-        self.result_text = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_READONLY)
-
-        self.calculate_button.Bind(wx.EVT_BUTTON, self.on_calculate)
-
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.optimization_type_label, 0, wx.ALL, 5)
-        self.sizer.Add(self.optimization_type_text, 0, wx.ALL | wx.EXPAND, 5)
-        self.sizer.Add(self.variables_label, 0, wx.ALL, 5)
-        self.sizer.Add(self.variables_text, 0, wx.ALL | wx.EXPAND, 5)
-        self.sizer.Add(self.equations_label, 0, wx.ALL, 5)
-        self.sizer.Add(self.equations_text, 0, wx.ALL | wx.EXPAND, 5)
-        self.sizer.Add(self.obj_coef_label, 0, wx.ALL, 5)
-        self.sizer.Add(self.obj_coef_text, 0, wx.ALL | wx.EXPAND, 5)
-        self.sizer.Add(self.constraints_coef_label, 0, wx.ALL, 5)
-        self.sizer.Add(self.constraints_coef_text, 0, wx.ALL | wx.EXPAND, 5)
-        self.sizer.Add(self.calculate_button, 0, wx.ALL | wx.EXPAND, 5)
-        self.sizer.Add(self.result_text, 1, wx.ALL | wx.EXPAND, 5)
-
+        self.lp_solve_panel = lp_solve_panel
+        self.problem_label = wx.StaticText(self, label="")
+        self.dual_label = wx.StaticText(self, label="")
+        self.sizer.Add(self.problem_label, 0, wx.ALL, 10)
+        self.sizer.Add(self.dual_label, 0, wx.ALL | wx.EXPAND, 10)
         self.SetSizer(self.sizer)
+        self.display_problem_info()
 
-    def on_calculate(self, event):
-        optimization_type = self.optimization_type_text.GetValue()
-        variables = int(self.variables_text.GetValue())
-        equations = int(self.equations_text.GetValue())
-        obj_coef = np.array([float(val) for val in self.obj_coef_text.GetValue().split()])
-        constraints_coef = []
+    def display_problem_info(self):
+        try:
+            objective_type, objective_function, constraints = self.lp_solve_panel.get_objective_info()
+            font = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+            self.problem_label.SetFont(font)
+            self.dual_label.SetFont(font)
+            print(objective_function)
+            n = 0
+            for i in range(len(objective_function)):
+                if objective_function[i] == 'x' and objective_function[i+1].isdigit():
+                    n = max(n, int(objective_function[i+1]))
 
-        for line in self.constraints_coef_text.GetValue().splitlines():
-            temp = [float(val) for val in line.split()]
-            constraints_coef.append(temp)
+            obj_coef, constant = parse_objective(str(objective_function), n)
+            #print("n:", n)
+            # Parse each constraint
+            constrains_coef = []
+            for constraint in constraints:
+                cons_coef, sign, constant = parse_constraint(str(constraint), n)
+                cons_coef.append(constant)
+                constrains_coef.append(cons_coef)
+            
+            font = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+            self.problem_label.SetFont(font)
+            self.dual_label.SetFont(font)
+            if (objective_type=='Maximize' and sign=='>=') or (objective_type=='Minimize' and sign=='<='):
+                self.problem_label.setLabel("you have made an error!")
+                self.dual_label.SetLabel("No dual")
+                raise Exception("Contradictory problem details. Please correct it")
 
-        result = self.dual(variables, obj_coef, equations, constraints_coef, optimization_type)
-        self.result_text.SetValue(result)
+            else:
+                # Display the problem in the panel
+                problem_text = f"Your given problem:\n{objective_type} {objective_function}\nSubject to,\n" 
+                for constraint in constraints:
+                    problem_text+=constraint+"\n"
+                for i in range(0,n):
+                    if i+1<n:
+                        problem_text+=f"x{i+1},"
+                    else:
+                        problem_text+=f"x{i+1}>=0"
+                self.problem_label.SetLabel(problem_text)
 
-    def dual(self, variables, obj_coef, equations, constrains_coef, optimization_type):
+                # Display the dual in the panel
+                dual_result = self.dual(n, obj_coef, constraints, constrains_coef, objective_type)
+                self.dual_label.SetLabel(dual_result)
+
+                self.Layout()
+
+        except Exception as e:
+            print(f"Error: {e}")
+            print(f"Objective Type: {objective_type}")
+            print(f"Objective Function: {str(objective_function)}")
+            print(f"Constraints: {constraints}")
+
+    def dual(self, variables, obj_coef, equations, constrains_coef, objective_type):
         constants = [i[-1] for i in constrains_coef]
         dual_constraints = np.transpose(constrains_coef)[:-1]
-        opt = {"maximize", "minimize"} - {optimization_type}
-        result_str = f"Dual of the LP problem\n{str(opt.pop()).upper()} {constants}w\nsubject to,\n"
-
+        opt = {"Maximize", "Minimize"} - {objective_type}
+        result_str = f"Dual of the LP problem\n{str(opt.pop())} "
+        result_str += ','
+        for i in range(len(list(constants))):
+            if i > 0 and int(constants[i]) > -1:
+                result_str += '+'
+            result_str += str(constants[i]) + "w" + str(f"{i + 1}")
+        result_str += "\nsubject to,\n"
         for i in range(len(dual_constraints)):
-            left = dual_constraints[i]
+            result_str +="\t"
+            left = list(dual_constraints[i])
             right = obj_coef[i]
-
-            if optimization_type.lower() == 'maximize':
-                result_str += f"{left}w >= {right}\n"
+            for i in range(len(left)):
+                if i > 0 and int(left[i]) > -1:
+                    result_str += '+'
+                result_str += str(left[i]) + "w" + str(f"{i + 1}")
+            if objective_type== 'Maximize':
+                result_str += " >= "
             else:
-                result_str += f"{left}w <= {right}\n"
+                result_str += " <= "
+            result_str += str(right) + "\n"
 
-        result_str += "w >= 0"
+        result_str += "\twi >= 0"
         return result_str
+
+
