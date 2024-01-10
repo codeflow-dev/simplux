@@ -100,6 +100,7 @@ class LPSolvePanel(wx.Panel):
 
     def on_delete_button(self, event):
         event.GetEventObject().GetParent().DestroyChildren()
+
     def get_objective_info(self):
         objective_type = self.radio_box.GetStringSelection()
         objective_function = self.objective.GetValue()

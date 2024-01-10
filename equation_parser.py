@@ -35,7 +35,7 @@ def parse_objective(expression, n):
         else:
             constant += int(term)
     return co, constant
-print(parse_objective("x1+2x2+x3",3))
+
 def parse_constraint(equation, n):
     match = re.match(r'(.+)<=(.+)', equation)
     if match:
@@ -85,4 +85,3 @@ def parse_constraint(equation, n):
         else:
             constant += int(term)
     return co, sign, constant
-#print(parse_constraint("x1+2x2+x3<=2",3))
