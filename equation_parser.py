@@ -85,4 +85,3 @@ def parse_constraint(equation, n):
         else:
             constant += int(term)
     return co, sign, constant
-

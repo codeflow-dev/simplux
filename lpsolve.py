@@ -101,6 +101,13 @@ class LPSolvePanel(wx.Panel):
     def on_delete_button(self, event):
         event.GetEventObject().GetParent().DestroyChildren()
 
+    def get_objective_info(self):
+        objective_type = self.radio_box.GetStringSelection()
+        objective_function = self.objective.GetValue()
+        constraints = [equ.equation_box.GetValue() for equ in self.equ_list.equations]
+
+        return objective_type, objective_function, constraints
+
 # constraints = ["2x1+x2<=3", "3x1+5x2<=9", "x1+3x2<=5"]
 # obj = "x1+4x2"
 # n = 2
