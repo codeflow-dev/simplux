@@ -5,7 +5,7 @@ from resultpanel import ResultPanel
 
 class SimpluxFrame(wx.Frame):
     def __init__(self):
-        super().__init__(parent=None, title='Simplux', size=(800, 800))
+        super().__init__(parent=None, title='Simplux', size=(1200, 800))
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.panel1 = LPSolvePanel(self)

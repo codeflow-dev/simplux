@@ -98,6 +98,7 @@ class LPSolvePanel(wx.Panel):
         minimize = bool(self.radio_box.Selection)
         self.result_panel.set_result1(simplex(obj, constraints, n, minimize))
         self.result_panel.dual_panel.display_problem_info()
+        self.result_panel.set_image(constraints, n)
 
     def on_delete_button(self, event):
         event.GetEventObject().GetParent().DestroyChildren()
@@ -109,22 +110,31 @@ class LPSolvePanel(wx.Panel):
 
         return objective_type, objective_function, constraints
 
-# constraints = ["2x1+x2<=3", "3x1+5x2<=9", "x1+3x2<=5"]
-# obj = "x1+4x2"
+# constraints = ["4x1-6x2-5x3-4x4>=-20", "-3x1-2x2+4x3+x4<=10", "-8x1-3x2+3x3+2x4<=20"]
+# obj = "-4x1-x2-3x3-5x4"
+# n = 4
+# constraints = ["x1+2x2+x3<=430", "3x1+2x3<=460", "x1+4x2<=420"]
+# obj = "3x1+2x2+5x3+9"
+# n = 3
+# constraints = ["5x1+4x2<=32", "x1+2x2<=10"]
+# obj = "-2x1-3x2-9"
 # n = 2
-constraints = ["x1+2x2+x3<=430", "3x1+2x3<=460", "x1+4x2<=420"]
-obj = "3x1+2x2+5x3"
-n = 3
 def simplex(obj, constraints, n, minimize):
     obj_coeff, obj_const = parse_objective(obj, n)
     obj_coeff = np.array(obj_coeff)
     obj_coeff = np.concatenate((obj_coeff * -1, np.zeros(len(constraints)), [obj_const]))
+    if minimize:
+        obj_coeff *= -1
     # print("Objective:", obj_coeff)
     constraints = [parse_constraint(i, n) for i in constraints]
-    print("Constraints:", constraints)
-    mat = [i[0] for i in constraints]
+    # print("Constraints:", constraints)
+    mat = np.array([i[0] for i in constraints])
     constraints_const = np.array([i[2] for i in constraints])
     constraints_const = np.reshape(constraints_const, (-1, 1))
+    for i in range(len(constraints)):
+        if constraints[i][1] == ">=":
+            mat[i] *= -1
+            constraints_const[i] *= -1
     mat = np.concatenate((mat, np.identity(len(constraints)), constraints_const), axis=1)
 
     head = ["x" + str(i+1) for i in range(n)] + ["s" + str(i+1) for i in range(len(constraints))]
@@ -139,7 +149,7 @@ def simplex(obj, constraints, n, minimize):
         ratio = np.where(ratio > 0, ratio, np.inf)
         key_row = np.argmin(ratio)
         if ratio[key_row] == np.inf:
-            raise ValueError("No smallest positive ratio found")
+            return "No solution available"
         
         # Divide whole row by key item
         mat[key_row] /= mat[key_row][key_column]
@@ -159,10 +169,10 @@ def simplex(obj, constraints, n, minimize):
         # print(left)
         key_column = np.argmin(obj_coeff[:-1])
 
-    result = f"Zmax = {obj_coeff[-1]}\n"
+    result = f"Z{'min' if minimize else 'max'} = {-obj_coeff[-1]}\n"
     for i in range(len(left)):
         if left[i][0] == 'x':
             result += f"{left[i]} = {mat[i][-1]}"
     return result
 
-print(simplex(obj, constraints, n, True))
+# print(simplex(obj, constraints, n, True))
