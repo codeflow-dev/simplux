@@ -50,6 +50,8 @@ class LPSolvePanel(wx.Panel):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.result_panel = None
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         
         label = wx.StaticText(self, label="Objective function")
@@ -72,7 +74,7 @@ class LPSolvePanel(wx.Panel):
         self.sizer.Add(label2, 0, wx.ALL, 10)
 
         self.equ_list = EquationList(self)
-        self.sizer.Add(self.equ_list, 1, wx.EXPAND, 10)
+        self.sizer.Add(self.equ_list, 1, wx.ALL | wx.EXPAND, 10)
 
         add_button = wx.Button(self, label="Add equation")
         add_button.Bind(wx.EVT_BUTTON, self.on_add_button)
@@ -82,8 +84,6 @@ class LPSolvePanel(wx.Panel):
         solve_button.Bind(wx.EVT_BUTTON, self.on_solve_button)
         self.sizer.Add(solve_button, 0, wx.ALL, 10)
 
-        self.result_text = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_READONLY)
-        self.sizer.Add(self.result_text, 1, wx.ALL | wx.EXPAND, 10)
 
         self.sizer.SetSizeHints(self)
         self.SetSizer(self.sizer)
@@ -96,7 +96,8 @@ class LPSolvePanel(wx.Panel):
         constraints = self.equ_list.get_equations()
         n = int(self.n.Value)
         minimize = bool(self.radio_box.Selection)
-        self.result_text.Value = simplex(obj, constraints, n, minimize)
+        self.result_panel.set_result1(simplex(obj, constraints, n, minimize))
+        self.result_panel.dual_panel.display_problem_info()
 
     def on_delete_button(self, event):
         event.GetEventObject().GetParent().DestroyChildren()
@@ -111,16 +112,16 @@ class LPSolvePanel(wx.Panel):
 # constraints = ["2x1+x2<=3", "3x1+5x2<=9", "x1+3x2<=5"]
 # obj = "x1+4x2"
 # n = 2
-# constraints = ["x1+2x2+x3<=430", "3x1+2x3<=460", "x1+4x2<=420"]
-# obj = "3x1+2x2+5x3"
-# n = 3
+constraints = ["x1+2x2+x3<=430", "3x1+2x3<=460", "x1+4x2<=420"]
+obj = "3x1+2x2+5x3"
+n = 3
 def simplex(obj, constraints, n, minimize):
     obj_coeff, obj_const = parse_objective(obj, n)
     obj_coeff = np.array(obj_coeff)
     obj_coeff = np.concatenate((obj_coeff * -1, np.zeros(len(constraints)), [obj_const]))
     # print("Objective:", obj_coeff)
     constraints = [parse_constraint(i, n) for i in constraints]
-    # print("Constraints:", constraints)
+    print("Constraints:", constraints)
     mat = [i[0] for i in constraints]
     constraints_const = np.array([i[2] for i in constraints])
     constraints_const = np.reshape(constraints_const, (-1, 1))
@@ -163,3 +164,5 @@ def simplex(obj, constraints, n, minimize):
         if left[i][0] == 'x':
             result += f"{left[i]} = {mat[i][-1]}"
     return result
+
+print(simplex(obj, constraints, n, True))

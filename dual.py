@@ -12,7 +12,6 @@ class LPDualPanel(wx.Panel):
         self.sizer.Add(self.problem_label, 0, wx.ALL, 10)
         self.sizer.Add(self.dual_label, 0, wx.ALL | wx.EXPAND, 10)
         self.SetSizer(self.sizer)
-        self.display_problem_info()
 
     def display_problem_info(self):
         try:
