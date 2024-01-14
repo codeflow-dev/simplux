@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_problem(cos, constants, max_point):
+def plot_problem(cos, constants, r):
   n = len(constants)
   val = 0.0
   for i in range(n):
@@ -12,26 +12,23 @@ def plot_problem(cos, constants, max_point):
 
   x = np.arange(0, val+1)
 
+  plt.figure("Constraints")
+
   for co, constant in zip(cos, constants):
     m=-(co[0]/co[1])
     c=constant/co[1]
     plt.plot(x, m*x+c, color='red', linestyle='solid')
 
+  plt.plot([r[0]], [r[1]], marker="o", markersize=5, markerfacecolor="black")
+  plt.text(r[0]*1.02, r[1]*1.02, f"Optimized point = ({round(r[0], 2)}, {round(r[1], 2)})", fontsize=10, color='black')
   plt.xlim(0.0, val)
   plt.ylim(0, val)
   plt.axhline(0, color='black',linewidth=1.5)
   plt.axvline(0, color='black',linewidth=1.5)
-
-  if(constants[0]/cos[0][0] > constants[1]/cos[1][0]):
-    equation = f'y = {-cos[0][0]}/{cos[0][1]} * x + {constants[0]}/{cos[0][1]}'
-    x_pos = constants[0]/cos[0][0] - (constants[0]/cos[0][0])*0.1  # Adjust this value to change the position of the text along x-axis
-    y_pos = (constants[0]/cos[0][0])*0.1  # Calculate y-position based on the equation
-    plt.text(x_pos, y_pos, equation, fontsize=10, color='blue')
-
-    equation = f'y = {-cos[1][0]}/{cos[1][1]} * x + {constants[1]}/{cos[1][1]}'
-    x_pos = (constants[1]/cos[1][1])*0.1  # Adjust this value to change the position of the text along x-axis
-    y_pos = (constants[1]/cos[1][1]) - (constants[1]/cos[1][1])*0.1  # Calculate y-position based on the equation
-    plt.text(x_pos, y_pos, equation, fontsize=10, color='blue')
+  plt.xlabel("x1")
+  plt.ylabel("x2")
 
   plt.grid()
   plt.savefig("output.png")
+  plt.cla()
+# plot_problem([[4, 3], [3, 4]], [12, 12], [1.7142857142857144, 1.7142857142857144])

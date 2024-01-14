@@ -65,7 +65,7 @@ class LPSolvePanel(wx.Panel):
         self.objective.SetFont(font)
         self.sizer.Add(self.objective, 0, wx.EXPAND | wx.ALL, 10)
 
-        label2 = wx.StaticText(self, label="Number of variables")
+        label2 = wx.StaticText(self, label="Number of decision variables")
         self.sizer.Add(label2, 0, wx.ALL, 10)
 
         self.n = wx.TextCtrl(self)
@@ -102,9 +102,10 @@ class LPSolvePanel(wx.Panel):
         constraints = self.equ_list.get_equations()
         n = int(self.n.Value)
         minimize = bool(self.radio_box.Selection)
-        self.result_panel.set_result1(simplex(obj, constraints, n, minimize))
+        result, r = simplex(obj, constraints, n, minimize)
+        self.result_panel.set_result1(result)
         self.result_panel.dual_panel.display_problem_info()
-        self.result_panel.set_image(constraints, n)
+        self.result_panel.set_image(constraints, n, r)
 
     def on_delete_button(self, event):
         event.GetEventObject().GetParent().DestroyChildren()
@@ -182,6 +183,6 @@ def simplex(obj, constraints, n, minimize):
             r[int(left[i][1])-1] = mat[i][-1]
     for i in range(len(r)):
         result += f"x{i+1} = {r[i]}\n"
-    return result
+    return result, r
 
 # print(simplex(obj, constraints, n, False))

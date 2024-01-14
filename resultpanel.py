@@ -43,12 +43,12 @@ class ResultPanel(wx.Panel):
     def set_result1(self, text):
         self.textbox1.Value = text
 
-    def set_image(self, constraints, n):
+    def set_image(self, constraints, n, r):
         if n <= 2:
             constraints = [parse_constraint(i, n) for i in constraints]
             cos = [i[0] for i in constraints]
             constants = [i[2] for i in constraints]
-            plot_problem(cos, constants, 0)
+            plot_problem(cos, constants, r)
             image_path = "output.png"  # Replace with the path to your image file
             image = wx.Image(image_path, wx.BITMAP_TYPE_ANY)
             self.plot_panel.Bitmap = wx.Bitmap(image)
