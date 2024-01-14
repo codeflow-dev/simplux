@@ -72,23 +72,37 @@ class LPDualPanel(wx.Panel):
         opt = {"Maximize", "Minimize"} - {objective_type}
         result_str = f"Dual of the LP problem\n{str(opt.pop())} "
         result_str += ','
+        firstNonZeroConstant=False
         for i in range(len(list(constants))):
-            if i > 0 and int(constants[i]) > -1:
-                result_str += '+'
-            result_str += str(constants[i]) + "w" + str(f"{i + 1}")
+            if constants[i] !=0:
+                if i > 0 and constants[i] > -1 and firstNonZeroConstant:
+                    result_str += '+'
+                if constants[i]==-1:
+                    result_str+="-"
+                elif constants[i]!=1:
+                    result_str+=str(constants[i])
+                firstNonZeroConstant=True
+                result_str += "w" + str(f"{i + 1}")
+
         result_str += "\nsubject to,\n"
+
         for i in range(len(dual_constraints)):
             result_str +="\t"
             left = list(dual_constraints[i])
             right = obj_coef[i]
+            firstNonZeroCoef=False
             for i in range(len(left)):
-                if i > 0 and int(left[i]) > -1:
-                    result_str += '+'
-                result_str += str(left[i]) + "w" + str(f"{i + 1}")
-            if objective_type== 'Maximize':
-                result_str += " >= "
-            else:
-                result_str += " <= "
+                if int(left[i]) !=0:
+                    if i > 0 and int(left[i]) > -1 and firstNonZeroCoef:
+                        result_str += '+'
+                    if left[i]==-1:
+                        result_str+="-"
+                    elif left[i]!=1:
+                        result_str+=str(left[i])
+                    firstNonZeroCoef=True
+                    result_str += "w" + str(f"{i + 1}")
+
+            result_str+= " >=" if objective_type=='Maximize' else " <="
             result_str += str(right) + "\n"
 
         result_str += "\twi >= 0"
