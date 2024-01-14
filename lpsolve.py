@@ -7,6 +7,8 @@ class EquationPanel(wx.Panel):
         super().__init__(parent)
         self.parent = parent
         self.equation_box = wx.TextCtrl(self)
+        font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+        self.equation_box.SetFont(font)
         delete_button = wx.Button(self, label="Delete")
         delete_button.Bind(wx.EVT_BUTTON, self.on_delete)
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -53,17 +55,21 @@ class LPSolvePanel(wx.Panel):
         self.result_panel = None
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
+
+        font = wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
         
         label = wx.StaticText(self, label="Objective function")
         self.sizer.Add(label, 0, wx.ALL, 10)
 
         self.objective = wx.TextCtrl(self)
+        self.objective.SetFont(font)
         self.sizer.Add(self.objective, 0, wx.EXPAND | wx.ALL, 10)
 
         label2 = wx.StaticText(self, label="Number of variables")
         self.sizer.Add(label2, 0, wx.ALL, 10)
 
         self.n = wx.TextCtrl(self)
+        self.n.SetFont(font)
         self.sizer.Add(self.n, 0, wx.EXPAND | wx.ALL, 10)
 
         radio_box_choices = ["Maximize", "Minimize"]
@@ -169,10 +175,13 @@ def simplex(obj, constraints, n, minimize):
         # print(left)
         key_column = np.argmin(obj_coeff[:-1])
 
-    result = f"Z{'min' if minimize else 'max'} = {-obj_coeff[-1]}\n"
+    result = f"Z{'min' if minimize else 'max'} = {-obj_coeff[-1] if minimize else obj_coeff[-1]}\n"
+    r = [0] * n
     for i in range(len(left)):
         if left[i][0] == 'x':
-            result += f"{left[i]} = {mat[i][-1]}"
+            r[int(left[i][1])-1] = mat[i][-1]
+    for i in range(len(r)):
+        result += f"x{i+1} = {r[i]}\n"
     return result
 
-# print(simplex(obj, constraints, n, True))
+# print(simplex(obj, constraints, n, False))

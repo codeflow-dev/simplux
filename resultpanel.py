@@ -18,6 +18,8 @@ class ResultPanel(wx.Panel):
         self.notebook.AddPage(self.tab3, "Visualization")
 
         self.textbox1 = wx.TextCtrl(self.tab1, style=wx.TE_MULTILINE | wx.TE_READONLY)
+        font = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL)
+        self.textbox1.SetFont(font)
         self.dual_panel = LPDualPanel(self.tab2, lp_solve_panel)
         self.plot_panel = wx.StaticBitmap(self.tab3, wx.ID_ANY)
 
