@@ -126,9 +126,13 @@ class LPSolvePanel(wx.Panel):
 # constraints = ["5x1+4x2<=32", "x1+2x2<=10"]
 # obj = "-2x1-3x2-9"
 # n = 2
+# constraints = ["x1+2x2>=40", "x1+x2>=30"]
+# obj = "12x1+16x2"
+# n = 2
 def simplex(obj, constraints, n, minimize):
     obj_coeff, obj_const = parse_objective(obj, n)
     obj_coeff = np.array(obj_coeff)
+    print(obj_coeff)
     obj_coeff = np.concatenate((obj_coeff * -1, np.zeros(len(constraints)), [obj_const]))
     if minimize:
         obj_coeff *= -1
@@ -156,7 +160,7 @@ def simplex(obj, constraints, n, minimize):
         ratio = np.where(ratio > 0, ratio, np.inf)
         key_row = np.argmin(ratio)
         if ratio[key_row] == np.inf:
-            return "No solution available"
+            return "No solution available", [0, 0]
         
         # Divide whole row by key item
         mat[key_row] /= mat[key_row][key_column]
@@ -171,8 +175,8 @@ def simplex(obj, constraints, n, minimize):
 
         left[key_row] = head[key_column]
         # print(head)
-        # print(obj_coeff)
-        # print(mat)
+        print(obj_coeff)
+        print(mat)
         # print(left)
         key_column = np.argmin(obj_coeff[:-1])
 
@@ -185,4 +189,4 @@ def simplex(obj, constraints, n, minimize):
         result += f"x{i+1} = {r[i]}\n"
     return result, r
 
-# print(simplex(obj, constraints, n, False))
+# print(simplex(obj, constraints, n, True))

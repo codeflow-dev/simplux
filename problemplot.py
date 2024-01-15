@@ -10,16 +10,24 @@ def plot_problem(cos, constants, r):
     for j in range(2):
       val = max(val, constants[i]/cos[i][j])
 
-  x = np.arange(0, val+1)
+  x = np.arange(0, val+1, 0.1)
 
   plt.figure("Constraints")
+
+  area = np.array([])
 
   for co, constant in zip(cos, constants):
     m=-(co[0]/co[1])
     c=constant/co[1]
+    if len(area) == 0:
+      area = m*x+c
+    else:
+      area = np.minimum(area, m*x+c)
     plt.plot(x, m*x+c, color='red', linestyle='solid')
 
-  plt.plot([r[0]], [r[1]], marker="o", markersize=5, markerfacecolor="black")
+  plt.fill_between(x, -x, area, color='green', alpha=0.5)
+
+  plt.plot([r[0]], [r[1]], marker="o", markersize=10, markerfacecolor="black")
   plt.text(r[0]*1.02, r[1]*1.02, f"Optimized point = ({round(r[0], 2)}, {round(r[1], 2)})", fontsize=10, color='black')
   plt.xlim(0.0, val)
   plt.ylim(0, val)
